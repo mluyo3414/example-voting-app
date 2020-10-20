@@ -5,7 +5,7 @@ steps:
     type: git-clone
     repo: '${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}'
     revision: '${{CF_REVISION}}'
-    git: github
+    git: mluyo3414
   DeletePullRequestEnvironment:
     title: Deleting Pull Request Environment
     image: codefresh/cfstep-helm:2.10.0
