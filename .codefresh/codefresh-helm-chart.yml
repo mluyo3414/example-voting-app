@@ -9,7 +9,7 @@ steps:
   LintHelmChart:
     title: Linting Helm Chart
     type: helm
-    working_directory: ./example-voting-app
+    working_directory: ./example-voting-app/
     arguments:
       helm_version: 3.0.1
       action: auth
