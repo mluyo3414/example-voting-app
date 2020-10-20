@@ -10,6 +10,7 @@ steps:
     title: Linting Helm Chart
     deploy:
       type: helm
+      helm_version: 3.0.1
       working_directory: ./example-voting-app
       arguments:
         action: auth
