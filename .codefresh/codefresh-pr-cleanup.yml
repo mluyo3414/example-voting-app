@@ -8,7 +8,10 @@ steps:
     git: mluyo3414
   DeletePullRequestEnvironment:
     title: Deleting Pull Request Environment
-    image: codefresh/cfstep-helm:2.10.0
-    commands:
-      - kubectl config use-context ${{KUBE_CONTEXT}}
-      - helm delete ${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_PULL_REQUEST_NUMBER}}-${{CF_REPO_NAME}} --purge
+    type: helm
+    arguments:
+      helm_version: 3.0.1
+      action: auth
+      kube_context: gke_sandbox-271314_us-central1-c_cluster-1
+      commands:
+        - helm delete ${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_PULL_REQUEST_NUMBER}}-${{CF_REPO_NAME}} --purge
