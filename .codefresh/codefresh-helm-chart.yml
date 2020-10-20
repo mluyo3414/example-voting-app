@@ -8,6 +8,12 @@ steps:
     git: mluyo3414
   LintHelmChart:
     title: Linting Helm Chart
-    image: codefresh/cfstep-helm
-    commands:
-      - bash -c 'cd /codefresh/volume/example-voting-app/example-voting-app && helm lint'
+    deploy:
+      type: helm
+      working_directory: ./example-voting-app
+      arguments:
+        action: auth
+        kube_context: gke_sandbox-271314_us-central1-c_cluster-1
+        commands:
+          - helm lint
+
