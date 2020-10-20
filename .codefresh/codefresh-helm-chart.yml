@@ -6,14 +6,14 @@ steps:
     repo: '${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}'
     revision: '${{CF_REVISION}}'
     git: mluyo3414
-  LintHelmChart:
-    title: Linting Helm Chart
-    type: helm
-    working_directory: ./example-voting-app
-    arguments:
-      helm_version: 3.0.1
-      action: auth
-      kube_context: gke_sandbox-271314_us-central1-c_cluster-1
-      commands:
-          - helm lint
+  # LintHelmChart:
+  #   title: Linting Helm Chart
+  #   type: helm
+  #   working_directory: ./example-voting-app
+  #   arguments:
+  #     helm_version: 3.0.1
+  #     action: auth
+  #     kube_context: gke_sandbox-271314_us-central1-c_cluster-1
+  #     commands:
+  #         - helm lint
 
