@@ -8,13 +8,12 @@ steps:
     git: mluyo3414
   LintHelmChart:
     title: Linting Helm Chart
-    deploy:
-      type: helm
+    type: helm
+    working_directory: ./example-voting-app
+    arguments:
       helm_version: 3.0.1
-      working_directory: ./example-voting-app
-      arguments:
-        action: auth
-        kube_context: gke_sandbox-271314_us-central1-c_cluster-1
-        commands:
+      action: auth
+      kube_context: gke_sandbox-271314_us-central1-c_cluster-1
+      commands:
           - helm lint
 
