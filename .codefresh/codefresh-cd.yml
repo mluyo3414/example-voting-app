@@ -212,17 +212,111 @@ steps:
         any:
           stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
           prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
-  RunStagingDVTs:
-    stage: staging
-    title: Running DVTS on Staging Release
-    image: 'codefresh/cli:latest'
+  # RunStagingDVTs:
+  #   stage: staging
+  #   title: Running DVTS on Staging Release
+  #   image: 'codefresh/cli:latest'
+  #   commands:
+  #     - codefresh run example-voting-app/dvts -b='${{CF_BRANCH}}' -s='${{CF_REVISION}}' -v CF_REPO_OWNER=${{CF_REPO_OWNER}} -v CF_REPO_NAME=${{CF_REPO_NAME}} -v CF_REVISION=${{CF_REVISION}} -v KUBE_CONTEXT='${{KUBE_CONTEXT}}' -v NAMESPACE=${{KUBE_NAMESPACE}} -v SERVICES='vote result' -v RELEASE_NAME='staging-example-voting-app' -v TEST_IMAGE='example-voting-app/tests:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}'
+  #   when:
+  #     condition:
+  #       any:
+  #         stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
+  #         prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
+  RemoveExistingTestReportsStage:
+    title: Removing Previous Test Reports
+    image: alpine
+    stage: "staging"
     commands:
-      - codefresh run example-voting-app/dvts -b='${{CF_BRANCH}}' -s='${{CF_REVISION}}' -v CF_REPO_OWNER=${{CF_REPO_OWNER}} -v CF_REPO_NAME=${{CF_REPO_NAME}} -v CF_REVISION=${{CF_REVISION}} -v KUBE_CONTEXT='${{KUBE_CONTEXT}}' -v NAMESPACE=${{KUBE_NAMESPACE}} -v SERVICES='vote result' -v RELEASE_NAME='staging-example-voting-app' -v TEST_IMAGE='example-voting-app/tests:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}'
+      - cd '${{CF_VOLUME_PATH}}/'
+      - rm -r -f allure-results
+    when:
+      condition:
+        any:
+          isPRopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'opened'"
+          isPRsynchronized: "'${{CF_PULL_REQUEST_ACTION}}' == 'synchronize'"
+          isPRreopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'reopened'"
+  GetKubernetesServicesEndpointsStage:
+    title: Getting Kubernetes Services Endpoints
+    image: codefresh/cfstep-helm
+    stage: "staging"
+    commands:
+      - kubectl config use-context ${{KUBE_CONTEXT}}
+      - bash -c 'cf_export VOTE_ENDPOINT_IP=$(kubectl get svc/vote -n voting-app-stage -o=jsonpath='{@.status.loadBalancer.ingress[*].ip}')'
+      - bash -c 'cf_export RESULT_ENDPOINT_IP=$(kubectl get svc/result -n voting-app-stage -o=jsonpath='{@.status.loadBalancer.ingress[*].ip}')'
     when:
       condition:
         any:
           stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
           prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
+  RunDeploymentVerificationTestsStage:
+    title: Running Selenium DVTs
+    stage: "staging"
+    type: composition
+    composition:
+      version: '2'
+      services:
+        selenium_hub:
+          image: selenium/hub:3.13.0
+          ports:
+            - 4444
+          environment:
+            - SE_OPTS=-debug
+            - GRID_MAX_SESSION=5
+        chrome_node:
+          image: selenium/node-chrome:3.13.0
+          ports:
+            - 5900
+            - 5555
+          command: bash -c "sleep 5 && /opt/bin/entry_point.sh"
+          depends_on: 
+            - selenium_hub
+          environment:
+            - HUB_HOST=selenium_hub
+            - REMOTE_HOST=http://chrome_node:5555
+            - NODE_MAX_SESSION=5
+            - NODE_MAX_INSTANCES=5
+        firefox_node:
+          image: selenium/node-firefox:3.13.0
+          ports:
+            - 5900
+            - 5555
+          command: bash -c "sleep 5 && /opt/bin/entry_point.sh"
+          depends_on: 
+            - selenium_hub
+          environment:
+            - HUB_HOST=selenium_hub
+            - REMOTE_HOST=http://firefox_node:5555
+            - NODE_MAX_SESSION=5
+            - NODE_MAX_INSTANCES=5
+    composition_candidates:
+      test:
+        image: 'mluyo3414/example-voting-app-tests:${{CF_BRANCH_TAG_NORMALIZED_LOWER_CASE}}-${{CF_SHORT_REVISION}}'
+        working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+        environment:
+          VOTE_ENDPOINT_IP: ${{VOTE_ENDPOINT_IP}}
+          RESULT_ENDPOINT_IP: ${{RESULT_ENDPOINT_IP}}
+        command: bash -c 'IFS=" " read -a browserarray <<< "${{BROWSERS}}" && for browser in "$${browserarray[@]}"; do BROWSER=$$browser python -m pytest -vvv --alluredir=${{CF_VOLUME_PATH}}/allure-results ./tests/selenium/test_app.py; done'
+        volumes:
+          - '${{CF_VOLUME_NAME}}:/codefresh/volume'
+    when:
+      condition:
+        any:
+          stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
+          prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
+# See https://codefresh.io/docs/docs/testing/test-reports to setup test reporting.  Tests above already in correct folder just need to add storage integration to this pipeline and uncomment steps below.
+  # GenerateTestReporting:
+  #   title: Generating Test Reporting
+  #   image: codefresh/cf-docker-test-reporting
+  #   working_directory: '${{CF_VOLUME_PATH}}/'
+  # GetKubernetesServicesEndpoints:
+  #   title: Getting Kubernetes Services Endpoints
+  #   image: codefresh/cfstep-helm
+  #   stage: "pull request"
+  #   commands:
+  #     - kubectl config use-context ${{KUBE_CONTEXT}}
+  #     - bash -c 'IFS=" " read -a services <<< "${{SERVICES}}" && for service in "${services[@]}"; do external_ip=""; while [ -z $external_ip ]; do echo "Waiting for end point... from kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template=\"{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}\""; external_ip=$(kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template="{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}"); [ -z "$external_ip" ] && sleep 10; done; echo "End point ready-" && echo $external_ip; cf_export ${service^^}_ENDPOINT_IP=$external_ip; done'
+
   ProductionApproval:
     type: pending-approval
     title: Deploy to Production?
