@@ -66,7 +66,7 @@ steps:
     working_directory: ./example-voting-app
     arguments:
       action: install
-      chart_name: example-voting-app-ephemeral
+      chart_name: example-voting-app
       release_name: example-voting-app-ephemeral
       helm_version: 3.0.2
       kube_context: gke_sandbox-271314_us-central1-c_cluster-1
