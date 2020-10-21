@@ -46,7 +46,7 @@ steps:
     fail_fast: true
   DeployPRRelease:
     stage: "pull request"
-    title: Create Ephemeral Helm Release for Pull Request
+    title: Deploy to PR namespace
     image: codefresh/cf-deploy-kubernetes:master
     commands:
       - /cf-deploy-kubernetes k8s-specifications/db-deployment.yaml
@@ -168,30 +168,41 @@ steps:
   UpgradeStagingRelease:
     stage: staging
     title: Upgrading Staging Release
-    image: dustinvanbuskirk/cfstep-helm:demo
-    working_directory: /
-    environment:
-      - CHART_REF=example-voting-app
-      - CHART_REPO_URL=cm://h.cfcr.io/${{CF_ACCOUNT}}/default
-      - CHART_VERSION=${{CF_RELEASE_TAG}}
-      - RELEASE_NAME=mluyo3414-staging-example-voting-app
-      - KUBE_CONTEXT=${{KUBE_CONTEXT}}
-      - NAMESPACE=${{KUBE_NAMESPACE}}
-      - DEBUG_CHART=true
-      - CMD_PS=-f /codefresh/volume/example-voting-app/helm_vars/example-voting-app/staging/worker/secrets.yaml
-      - value_result_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/result
-      - value_result_image_tag=master-${{CF_SHORT_REVISION}}
-      - value_result_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
-      - value_vote_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/vote
-      - value_vote_image_tag=master-${{CF_SHORT_REVISION}}
-      - value_vote_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
-      - value_worker_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/worker
-      - value_worker_image_tag=master-${{CF_SHORT_REVISION}}
-      - value_worker_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
+    # image: dustinvanbuskirk/cfstep-helm:demo
+    # working_directory: /
+    # environment:
+    #   - CHART_REF=example-voting-app
+    #   - CHART_REPO_URL=cm://h.cfcr.io/${{CF_ACCOUNT}}/default
+    #   - CHART_VERSION=${{CF_RELEASE_TAG}}
+    #   - RELEASE_NAME=mluyo3414-staging-example-voting-app
+    #   - KUBE_CONTEXT=${{KUBE_CONTEXT}}
+    #   - NAMESPACE=${{KUBE_NAMESPACE}}
+    #   - DEBUG_CHART=true
+    #   - CMD_PS=-f /codefresh/volume/example-voting-app/helm_vars/example-voting-app/staging/worker/secrets.yaml
+    #   - value_result_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/result
+    #   - value_result_image_tag=master-${{CF_SHORT_REVISION}}
+    #   - value_result_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
+    #   - value_vote_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/vote
+    #   - value_vote_image_tag=master-${{CF_SHORT_REVISION}}
+    #   - value_vote_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
+    #   - value_worker_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/worker
+    #   - value_worker_image_tag=master-${{CF_SHORT_REVISION}}
+    #   - value_worker_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
+    # commands:
+    #   - echo -e "${{GPG_SEC}}" > mygpgkey_sec.asc
+    #   - gpg --import --allow-secret-key-import mygpgkey_sec.asc
+    #   - /opt/bin/release_chart
+    image: codefresh/cf-deploy-kubernetes:master
     commands:
-      - echo -e "${{GPG_SEC}}" > mygpgkey_sec.asc
-      - gpg --import --allow-secret-key-import mygpgkey_sec.asc
-      - /opt/bin/release_chart
+      - /cf-deploy-kubernetes k8s-specifications/db-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/db-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/redis-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/redis-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/result-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/result-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/vote-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/vote-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/worker-deployment.yaml
     when:
       condition:
         any:
