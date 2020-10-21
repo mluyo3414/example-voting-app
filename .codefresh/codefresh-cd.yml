@@ -233,9 +233,8 @@ steps:
     when:
       condition:
         any:
-          isPRopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'opened'"
-          isPRsynchronized: "'${{CF_PULL_REQUEST_ACTION}}' == 'synchronize'"
-          isPRreopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'reopened'"
+          stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
+          prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
   GetKubernetesServicesEndpointsStage:
     title: Getting Kubernetes Services Endpoints
     image: codefresh/cfstep-helm
