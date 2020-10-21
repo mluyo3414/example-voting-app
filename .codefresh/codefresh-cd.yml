@@ -47,9 +47,10 @@ steps:
   push:
     type: helm
     stage: "pull request"
+    working_directory: ./example-voting-app
     arguments:
       action: push
-      chart_name: ./example-voting-app/
+      chart_name: example-voting-app
       release_name: example-voting-app-ephemeral
       helm_version: 3.0.2
       kube_context: gke_sandbox-271314_us-central1-c_cluster-1
@@ -62,9 +63,10 @@ steps:
   install:
     type: helm
     stage: "pull request"
+    working_directory: ./example-voting-app
     arguments:
       action: install
-      chart_name: ./example-voting-app/
+      chart_name: example-voting-app-ephemeral
       release_name: example-voting-app-ephemeral
       helm_version: 3.0.2
       kube_context: gke_sandbox-271314_us-central1-c_cluster-1
