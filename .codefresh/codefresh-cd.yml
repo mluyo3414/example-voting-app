@@ -234,43 +234,23 @@ steps:
   UpgradeProductionRelease:
     stage: production
     title: Upgrading Production Release
-    image: dustinvanbuskirk/cfstep-helm:demo
-    working_directory: /
-    environment:
-      - CHART_REF=example-voting-app
-      - CHART_REPO_URL=cm://h.cfcr.io/${{CF_ACCOUNT}}/default
-      - CHART_VERSION=${{CF_RELEASE_TAG}}
-      - RELEASE_NAME=mluyo3414-production-example-voting-app
-      - KUBE_CONTEXT=${{KUBE_CONTEXT}}
-      - NAMESPACE=${{KUBE_NAMESPACE}}
-      - DEBUG_CHART=true
-      # NEED PGP Key in metadata of CD spec
-      - CMD_PS=-f /codefresh/volume/example-voting-app/helm_vars/example-voting-app/production/worker/secrets.yaml
-      - value_result_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/result
-      - value_result_image_tag=master-${{CF_SHORT_REVISION}}
-      - value_result_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
-      - value_vote_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/vote
-      - value_vote_image_tag=master-${{CF_SHORT_REVISION}}
-      - value_vote_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
-      - value_worker_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/worker
-      - value_worker_image_tag=master-${{CF_SHORT_REVISION}}
-      - value_worker_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
+    image: codefresh/cf-deploy-kubernetes:master
     commands:
-      - echo -e "${{GPG_SEC}}" > mygpgkey_sec.asc
-      - gpg --import --allow-secret-key-import mygpgkey_sec.asc
-      - /opt/bin/release_chart
+      - /cf-deploy-kubernetes k8s-specifications/db-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/db-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/redis-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/redis-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/result-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/result-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/vote-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/vote-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/worker-deployment.yaml
+    environment:
+      - KUBECONTEXT=gke_sandbox-271314_us-central1-c_cluster-1
+      - KUBERNETES_NAMESPACE=voting-app
+      - KUBERNETES_DEPLOYMENT_TIMEOUT=360   
     when:
       steps:
       - name: ProductionApproval
         on:
         - approved
-  RunProductionDVTs:
-    stage: production
-    title: Running DVTS on Production Release
-    image: 'codefresh/cli:latest'
-    commands:
-      - codefresh run example-voting-app/dvts -b='${{CF_BRANCH}}' -s='${{CF_REVISION}}' -v CF_REPO_OWNER=${{CF_REPO_OWNER}} -v CF_REPO_NAME=${{CF_REPO_NAME}} -v CF_REVISION=${{CF_REVISION}} -v KUBE_CONTEXT='${{KUBE_CONTEXT}}' -v NAMESPACE=${{KUBE_NAMESPACE}} -v SERVICES='vote result' -v RELEASE_NAME='production-example-voting-app' -v TEST_IMAGE='example-voting-app/tests:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}'
-    when:
-      condition:
-        all:
-          prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
