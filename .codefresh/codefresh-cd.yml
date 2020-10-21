@@ -49,8 +49,8 @@ steps:
     title: Create Ephemeral Helm Release for Pull Request
     image: codefresh/cf-deploy-kubernetes:master
     commands:
-      - /cf-deploy-kubernetes k8s-resources/db-deployment.yml
-      - /cf-deploy-kubernetes k8s-resources/db-service.yml
+      - /cf-deploy-kubernetes k8s-specifications/db-deployment.yml
+      - /cf-deploy-kubernetes k8s-specifications/db-service.yml
     environment:
       - KUBECONTEXT=gke_sandbox-271314_us-central1-c_cluster-1
       - KUBERNETES_NAMESPACE=voting-app
