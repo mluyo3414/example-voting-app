@@ -80,19 +80,6 @@ steps:
           isPRopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'opened'"
           isPRsynchronized: "'${{CF_PULL_REQUEST_ACTION}}' == 'synchronize'"
           isPRreopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'reopened'"
-  PushChartToHelmRepository:
-    stage: staging
-    title: Push Helm Chart to Repository
-    image: dustinvanbuskirk/cfstep-helm:demo
-    environment:
-      - ACTION=push
-      - CHART_REF=example-voting-app
-      - CHART_VERSION=${{CF_RELEASE_TAG}}
-    when:
-      condition:
-        any:
-          stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
-          prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
   UpgradeStagingRelease:
     stage: staging
     title: Upgrading Staging Release
