@@ -89,12 +89,20 @@ steps:
   #   commands:
   #     - kubectl config use-context ${{KUBE_CONTEXT}}
   #     - bash -c 'IFS=" " read -a services <<< "${{SERVICES}}" && for service in "${services[@]}"; do external_ip=""; while [ -z $external_ip ]; do echo "Waiting for end point... from kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template=\"{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}\""; external_ip=$(kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template="{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}"); [ -z "$external_ip" ] && sleep 10; done; echo "End point ready-" && echo $external_ip; cf_export ${service^^}_ENDPOINT_IP=$external_ip; done'
-  #   when:
-  #     condition:
-  #       any:
-  #         isPRopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'opened'"
-  #         isPRsynchronized: "'${{CF_PULL_REQUEST_ACTION}}' == 'synchronize'"
-  #         isPRreopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'reopened'"
+  GetKubernetesServicesEndpoints:
+    title: Getting Kubernetes Services Endpoints
+    image: codefresh/cfstep-helm
+    stage: "pull request"
+    commands:
+      - kubectl config use-context ${{KUBE_CONTEXT}}
+      - bash -c 'cf_export VOTE_ENDPOINT_IP=$(kubectl get svc/vote -n voting-app -o=jsonpath='{@.status.loadBalancer.ingress[*].ip}')'
+      - bash -c 'cf_export RESULT_ENDPOINT_IP=$(kubectl get svc/result -n voting-app -o=jsonpath='{@.status.loadBalancer.ingress[*].ip}')'
+    when:
+      condition:
+        any:
+          isPRopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'opened'"
+          isPRsynchronized: "'${{CF_PULL_REQUEST_ACTION}}' == 'synchronize'"
+          isPRreopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'reopened'"
   RunDeploymentVerificationTests:
     title: Running Selenium DVTs
     stage: "pull request"
