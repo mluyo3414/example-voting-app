@@ -70,6 +70,7 @@ steps:
       release_name: example-voting-app-ephemeral
       helm_version: 3.0.2
       kube_context: gke_sandbox-271314_us-central1-c_cluster-1
+      namespace: voting-app
     when:
       condition:
         any:
