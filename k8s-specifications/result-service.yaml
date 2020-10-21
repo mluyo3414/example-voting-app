@@ -7,7 +7,7 @@ spec:
   ports:
   - name: "result-service"
     protocol: TCP
-    port: 5001
+    port: 80
     targetPort: 80
   selector:
     app: result
