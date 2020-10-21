@@ -78,7 +78,7 @@ namespace Worker
             {
                 try
                 {
-                    Console.WriteLine($"string connection '{connectionString}'");
+                    //Console.WriteLine($"string connection '{connectionString}'");
                     connection = new NpgsqlConnection(connectionString);
                     connection.Open();
                     break;
