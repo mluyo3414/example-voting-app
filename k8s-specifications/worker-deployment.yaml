@@ -25,7 +25,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: appsecret
-              key: POSTGRES_USER
+              key: POSTGRES_USERNAME
         - name: POSTGRES_SERVER
           valueFrom:
             secretKeyRef:
