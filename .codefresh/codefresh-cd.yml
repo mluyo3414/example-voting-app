@@ -206,22 +206,9 @@ steps:
         any:
           stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
           prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
-  GetKubernetesServicesEndpointsStage:
-    title: Getting Kubernetes Services Endpoints
-    image: codefresh/cfstep-helm
-    stage: "staging"
-    commands:
-      - kubectl config use-context ${{KUBE_CONTEXT}}
-      - bash -c 'cf_export VOTE_ENDPOINT_IP=$(kubectl get svc/vote -n voting-app-stage -o=jsonpath='{@.status.loadBalancer.ingress[*].ip}')'
-      - bash -c 'cf_export RESULT_ENDPOINT_IP=$(kubectl get svc/result -n voting-app-stage -o=jsonpath='{@.status.loadBalancer.ingress[*].ip}')'
-    when:
-      condition:
-        any:
-          stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
-          prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
   RunDeploymentVerificationTestsStage:
     title: Running Selenium DVTs
-    stage: "staging"
+    stage: staging
     type: composition
     composition:
       version: '2'
@@ -273,8 +260,7 @@ steps:
       condition:
         any:
           stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
-          prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
-
+          prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"          
   ProductionApproval:
     type: pending-approval
     title: Deploy to Production?
