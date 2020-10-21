@@ -1,3 +1,4 @@
+
 version: '1.0'
 steps:
   main_clone:
@@ -5,18 +6,19 @@ steps:
     type: git-clone
     repo: '${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}'
     revision: '${{CF_REVISION}}'
+    git: mluyo3414
   RemoveExistingTestReports:
     title: Removing Previous Test Reports
     image: alpine
     commands:
       - cd '${{CF_VOLUME_PATH}}/'
       - rm -r -f allure-results
-  GetKubernetesServicesEndpoints:
-    title: Getting Kubernetes Services Endpoints
-    image: codefresh/cfstep-helm
-    commands:
-      - kubectl config use-context ${{KUBE_CONTEXT}}
-      - bash -c 'IFS=" " read -a services <<< "${{SERVICES}}" && for service in "${services[@]}"; do external_ip=""; while [ -z $external_ip ]; do echo "Waiting for end point... from kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template=\"{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}\""; external_ip=$(kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template="{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}"); [ -z "$external_ip" ] && sleep 10; done; echo "End point ready-" && echo $external_ip; cf_export ${service^^}_ENDPOINT_IP=$external_ip; done'
+  # GetKubernetesServicesEndpoints:
+  #   title: Getting Kubernetes Services Endpoints
+  #   image: codefresh/cfstep-helm
+  #   commands:
+  #     - kubectl config use-context ${{KUBE_CONTEXT}}
+  #     - bash -c 'IFS=" " read -a services <<< "${{SERVICES}}" && for service in "${services[@]}"; do external_ip=""; while [ -z $external_ip ]; do echo "Waiting for end point... from kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template=\"{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}\""; external_ip=$(kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template="{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}"); [ -z "$external_ip" ] && sleep 10; done; echo "End point ready-" && echo $external_ip; cf_export ${service^^}_ENDPOINT_IP=$external_ip; done'
   RunDeploymentVerificationTests:
     title: Running Selenium DVTs
     type: composition

@@ -1,14 +1,39 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: worker
 spec:
+  revisionHistoryLimit: 2  
   replicas: 1
+  selector:
+    matchLabels:
+      app: worker
   template:
     metadata:
       labels:
         app: worker
     spec:
       containers:
-      - image: dockersamples/examplevotingapp_worker
+      - image: mluyo3414/example-voting-app-worker:{{CF_BRANCH_TAG_NORMALIZED_LOWER_CASE}}-{{CF_SHORT_REVISION}}
         name: worker
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: POSTGRES_USERNAME
+        - name: POSTGRES_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: POSTGRES_SERVER_WORKER
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: REDIS_HOST_WORKER

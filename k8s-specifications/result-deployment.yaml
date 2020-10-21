@@ -1,14 +1,34 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: result
 spec:
+  revisionHistoryLimit: 2  
   replicas: 1
+  selector:
+    matchLabels:
+      app: result
   template:
     metadata:
       labels:
         app: result
     spec:
       containers:
-      - image: dockersamples/examplevotingapp_result:before
+      - image: mluyo3414/example-voting-app-result:{{CF_BRANCH_TAG_NORMALIZED_LOWER_CASE}}-{{CF_SHORT_REVISION}}
         name: result
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: POSTGRES_USERNAME
+        - name: POSTGRES_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: POSTGRES_SERVER
