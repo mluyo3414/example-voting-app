@@ -26,13 +26,13 @@ spec:
             secretKeyRef:
               name: appsecret
               key: POSTGRES_USERNAME
-        - name: POSTGRES_SERVER_WORKER
+        - name: POSTGRES_SERVER
           valueFrom:
             secretKeyRef:
               name: appsecret
-              key: POSTGRES_SERVER
-        - name: REDIS_HOST_WORKER
+              key: POSTGRES_SERVER_WORKER
+        - name: REDIS_HOST
           valueFrom:
             secretKeyRef:
               name: appsecret
-              key: REDIS_HOST
+              key: REDIS_HOST_WORKER
