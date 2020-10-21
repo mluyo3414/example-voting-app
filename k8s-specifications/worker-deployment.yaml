@@ -15,3 +15,24 @@ spec:
       containers:
       - image: mluyo3414/example-voting-app-worker:{{CF_BRANCH_TAG_NORMALIZED_LOWER_CASE}}-{{CF_SHORT_REVISION}}
         name: worker
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: POSTGRES_USER
+        - name: POSTGRES_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: POSTGRES_SERVER
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: REDIS_HOST
