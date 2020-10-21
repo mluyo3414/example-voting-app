@@ -1,0 +1,13 @@
+version: '1.0'
+steps:
+  main_clone:
+    title: Cloning main repository...
+    type: git-clone
+    repo: '${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}'
+    revision: '${{CF_REVISION}}'
+    git: mluyo3414
+  RemoveExistingTestReports:
+    title: Removing Previous Test Reports
+    image: alpine
+    commands:
+      - cd '${{CF_VOLUME_PATH}}/'
