@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: vote
 spec:
+  revisionHistoryLimit: 2  
   replicas: 1
   selector:
     matchLabels:
@@ -20,4 +21,4 @@ spec:
           valueFrom:
             secretKeyRef:
               name: appsecret
-              key: REDIS_HOST
+              key: REDIS_HOST_WORKER
