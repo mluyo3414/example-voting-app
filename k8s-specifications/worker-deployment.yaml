@@ -1,14 +1,17 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: worker
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: worker
   template:
     metadata:
       labels:
         app: worker
     spec:
       containers:
-      - image: dockersamples/examplevotingapp_worker
+      - image: mluyo3414/example-voting-worker:{{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}
         name: worker

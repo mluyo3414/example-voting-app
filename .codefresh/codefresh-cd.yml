@@ -51,6 +51,14 @@ steps:
     commands:
       - /cf-deploy-kubernetes k8s-specifications/db-deployment.yaml
       - /cf-deploy-kubernetes k8s-specifications/db-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/redis-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/redis-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/result-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/result-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/vote-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/vote-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/worker-deployment.yaml
+
     environment:
       - KUBECONTEXT=gke_sandbox-271314_us-central1-c_cluster-1
       - KUBERNETES_NAMESPACE=voting-app

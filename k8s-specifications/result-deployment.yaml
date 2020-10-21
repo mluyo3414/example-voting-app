@@ -1,14 +1,17 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: result
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: result
   template:
     metadata:
       labels:
         app: result
     spec:
       containers:
-      - image: dockersamples/examplevotingapp_result:before
+      - image: mluyo3414/example-voting-result:{{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}
         name: result
