@@ -17,7 +17,10 @@ spec:
         name: db
         env:
         - name: POSTGRES_PASSWORD
-          value: password
+          valueFrom:
+            secretKeyRef:
+              name: appsecret
+              key: POSTGRES_PASSWORD
         volumeMounts:
         - mountPath: /var/lib/postgresql/data
           name: db-data
