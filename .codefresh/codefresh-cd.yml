@@ -82,13 +82,6 @@ steps:
           isPRopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'opened'"
           isPRsynchronized: "'${{CF_PULL_REQUEST_ACTION}}' == 'synchronize'"
           isPRreopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'reopened'"
-  # GetKubernetesServicesEndpoints:
-  #   title: Getting Kubernetes Services Endpoints
-  #   image: codefresh/cfstep-helm
-  #   stage: "pull request"
-  #   commands:
-  #     - kubectl config use-context ${{KUBE_CONTEXT}}
-  #     - bash -c 'IFS=" " read -a services <<< "${{SERVICES}}" && for service in "${services[@]}"; do external_ip=""; while [ -z $external_ip ]; do echo "Waiting for end point... from kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template=\"{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}\""; external_ip=$(kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template="{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}"); [ -z "$external_ip" ] && sleep 10; done; echo "End point ready-" && echo $external_ip; cf_export ${service^^}_ENDPOINT_IP=$external_ip; done'
   GetKubernetesServicesEndpoints:
     title: Getting Kubernetes Services Endpoints
     image: codefresh/cfstep-helm
@@ -165,33 +158,9 @@ steps:
           isPRopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'opened'"
           isPRsynchronized: "'${{CF_PULL_REQUEST_ACTION}}' == 'synchronize'"
           isPRreopen: "'${{CF_PULL_REQUEST_ACTION}}' == 'reopened'"
-  UpgradeStagingRelease:
+  UpgradeStageRelease:
     stage: staging
     title: Upgrading Staging Release
-    # image: dustinvanbuskirk/cfstep-helm:demo
-    # working_directory: /
-    # environment:
-    #   - CHART_REF=example-voting-app
-    #   - CHART_REPO_URL=cm://h.cfcr.io/${{CF_ACCOUNT}}/default
-    #   - CHART_VERSION=${{CF_RELEASE_TAG}}
-    #   - RELEASE_NAME=mluyo3414-staging-example-voting-app
-    #   - KUBE_CONTEXT=${{KUBE_CONTEXT}}
-    #   - NAMESPACE=${{KUBE_NAMESPACE}}
-    #   - DEBUG_CHART=true
-    #   - CMD_PS=-f /codefresh/volume/example-voting-app/helm_vars/example-voting-app/staging/worker/secrets.yaml
-    #   - value_result_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/result
-    #   - value_result_image_tag=master-${{CF_SHORT_REVISION}}
-    #   - value_result_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
-    #   - value_vote_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/vote
-    #   - value_vote_image_tag=master-${{CF_SHORT_REVISION}}
-    #   - value_vote_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
-    #   - value_worker_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/worker
-    #   - value_worker_image_tag=master-${{CF_SHORT_REVISION}}
-    #   - value_worker_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
-    # commands:
-    #   - echo -e "${{GPG_SEC}}" > mygpgkey_sec.asc
-    #   - gpg --import --allow-secret-key-import mygpgkey_sec.asc
-    #   - /opt/bin/release_chart
     image: codefresh/cf-deploy-kubernetes:master
     commands:
       - /cf-deploy-kubernetes k8s-specifications/db-deployment.yaml
@@ -212,21 +181,10 @@ steps:
         any:
           stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
           prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
-  # RunStagingDVTs:
-  #   stage: staging
-  #   title: Running DVTS on Staging Release
-  #   image: 'codefresh/cli:latest'
-  #   commands:
-  #     - codefresh run example-voting-app/dvts -b='${{CF_BRANCH}}' -s='${{CF_REVISION}}' -v CF_REPO_OWNER=${{CF_REPO_OWNER}} -v CF_REPO_NAME=${{CF_REPO_NAME}} -v CF_REVISION=${{CF_REVISION}} -v KUBE_CONTEXT='${{KUBE_CONTEXT}}' -v NAMESPACE=${{KUBE_NAMESPACE}} -v SERVICES='vote result' -v RELEASE_NAME='staging-example-voting-app' -v TEST_IMAGE='example-voting-app/tests:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}'
-  #   when:
-  #     condition:
-  #       any:
-  #         stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
-  #         prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
   RemoveExistingTestReportsStage:
     title: Removing Previous Test Reports
     image: alpine
-    stage: "staging"
+    stage: staging
     commands:
       - cd '${{CF_VOLUME_PATH}}/'
       - rm -r -f allure-results
@@ -238,7 +196,7 @@ steps:
   GetKubernetesServicesEndpointsStage:
     title: Getting Kubernetes Services Endpoints
     image: codefresh/cfstep-helm
-    stage: "staging"
+    stage: staging
     commands:
       - kubectl config use-context ${{KUBE_CONTEXT}}
       - bash -c 'cf_export VOTE_ENDPOINT_IP=$(kubectl get svc/vote -n voting-app-stage -o=jsonpath='{@.status.loadBalancer.ingress[*].ip}')'
@@ -250,7 +208,7 @@ steps:
           prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
   RunDeploymentVerificationTestsStage:
     title: Running Selenium DVTs
-    stage: "staging"
+    stage: staging
     type: composition
     composition:
       version: '2'
@@ -302,20 +260,7 @@ steps:
       condition:
         any:
           stageRelease: "'${{CF_PRERELEASE_FLAG}}' == 'true'"
-          prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
-# See https://codefresh.io/docs/docs/testing/test-reports to setup test reporting.  Tests above already in correct folder just need to add storage integration to this pipeline and uncomment steps below.
-  # GenerateTestReporting:
-  #   title: Generating Test Reporting
-  #   image: codefresh/cf-docker-test-reporting
-  #   working_directory: '${{CF_VOLUME_PATH}}/'
-  # GetKubernetesServicesEndpoints:
-  #   title: Getting Kubernetes Services Endpoints
-  #   image: codefresh/cfstep-helm
-  #   stage: "pull request"
-  #   commands:
-  #     - kubectl config use-context ${{KUBE_CONTEXT}}
-  #     - bash -c 'IFS=" " read -a services <<< "${{SERVICES}}" && for service in "${services[@]}"; do external_ip=""; while [ -z $external_ip ]; do echo "Waiting for end point... from kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template=\"{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}\""; external_ip=$(kubectl get svc ${{RELEASE_NAME}}-${service} --namespace ${{NAMESPACE}} --template="{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}"); [ -z "$external_ip" ] && sleep 10; done; echo "End point ready-" && echo $external_ip; cf_export ${service^^}_ENDPOINT_IP=$external_ip; done'
-
+          prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"          
   ProductionApproval:
     type: pending-approval
     title: Deploy to Production?
@@ -327,43 +272,23 @@ steps:
   UpgradeProductionRelease:
     stage: production
     title: Upgrading Production Release
-    image: dustinvanbuskirk/cfstep-helm:demo
-    working_directory: /
-    environment:
-      - CHART_REF=example-voting-app
-      - CHART_REPO_URL=cm://h.cfcr.io/${{CF_ACCOUNT}}/default
-      - CHART_VERSION=${{CF_RELEASE_TAG}}
-      - RELEASE_NAME=mluyo3414-production-example-voting-app
-      - KUBE_CONTEXT=${{KUBE_CONTEXT}}
-      - NAMESPACE=${{KUBE_NAMESPACE}}
-      - DEBUG_CHART=true
-      # NEED PGP Key in metadata of CD spec
-      - CMD_PS=-f /codefresh/volume/example-voting-app/helm_vars/example-voting-app/production/worker/secrets.yaml
-      - value_result_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/result
-      - value_result_image_tag=master-${{CF_SHORT_REVISION}}
-      - value_result_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
-      - value_vote_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/vote
-      - value_vote_image_tag=master-${{CF_SHORT_REVISION}}
-      - value_vote_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
-      - value_worker_image_repository=r.cfcr.io/${{CF_ACCOUNT}}/example-voting-app/worker
-      - value_worker_image_tag=master-${{CF_SHORT_REVISION}}
-      - value_worker_image_pullSecret=codefresh-generated-r.cfcr.io-cfcr-${{KUBE_NAMESPACE}}
+    image: codefresh/cf-deploy-kubernetes:master
     commands:
-      - echo -e "${{GPG_SEC}}" > mygpgkey_sec.asc
-      - gpg --import --allow-secret-key-import mygpgkey_sec.asc
-      - /opt/bin/release_chart
+      - /cf-deploy-kubernetes k8s-specifications/db-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/db-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/redis-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/redis-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/result-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/result-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/vote-deployment.yaml
+      - /cf-deploy-kubernetes k8s-specifications/vote-service.yaml
+      - /cf-deploy-kubernetes k8s-specifications/worker-deployment.yaml
+    environment:
+      - KUBECONTEXT=gke_sandbox-271314_us-central1-c_cluster-1
+      - KUBERNETES_NAMESPACE=voting-app-prod
+      - KUBERNETES_DEPLOYMENT_TIMEOUT=360   
     when:
       steps:
       - name: ProductionApproval
         on:
         - approved
-  RunProductionDVTs:
-    stage: production
-    title: Running DVTS on Production Release
-    image: 'codefresh/cli:latest'
-    commands:
-      - codefresh run example-voting-app/dvts -b='${{CF_BRANCH}}' -s='${{CF_REVISION}}' -v CF_REPO_OWNER=${{CF_REPO_OWNER}} -v CF_REPO_NAME=${{CF_REPO_NAME}} -v CF_REVISION=${{CF_REVISION}} -v KUBE_CONTEXT='${{KUBE_CONTEXT}}' -v NAMESPACE=${{KUBE_NAMESPACE}} -v SERVICES='vote result' -v RELEASE_NAME='production-example-voting-app' -v TEST_IMAGE='example-voting-app/tests:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}'
-    when:
-      condition:
-        all:
-          prodRelease: "'${{CF_PRERELEASE_FLAG}}' == 'false'"
