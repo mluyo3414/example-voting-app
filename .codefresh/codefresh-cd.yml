@@ -203,6 +203,10 @@ steps:
       - /cf-deploy-kubernetes k8s-specifications/vote-deployment.yaml
       - /cf-deploy-kubernetes k8s-specifications/vote-service.yaml
       - /cf-deploy-kubernetes k8s-specifications/worker-deployment.yaml
+    environment:
+      - KUBECONTEXT=gke_sandbox-271314_us-central1-c_cluster-1
+      - KUBERNETES_NAMESPACE=voting-app-stage
+      - KUBERNETES_DEPLOYMENT_TIMEOUT=360   
     when:
       condition:
         any:
